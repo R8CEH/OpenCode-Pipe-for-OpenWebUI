@@ -5,7 +5,7 @@ description: Run OpenCode's agent loop from inside OpenWebUI chats via subproces
              isolated project directory. Files created by the agent are uploaded
              as artifacts.
 author: Denis Kutuzov (aka R8CEH)
-author_url: https://github.com/R8CEH/OpenCode-Pipe-for-OpenWebUI
+author_url: https://github.com/R8CEH/openwebui-claude-code
 version: 0.2.0
 license: MIT
 requirements:
@@ -89,19 +89,23 @@ async def _chats_call(method: str, *args):
 
 
 async def _load_chat_state(chat_id: str) -> tuple:
-    """Load opencode session_id and workdir_name from chat meta."""
+    """Load opencode session_id, workdir_name and model_id from chat meta."""
     try:
         chat = await _chats_call("get_chat_by_id", chat_id)
         if chat:
             meta = (chat.chat or {}).get("meta", {})
-            return meta.get("opencode_session_id"), meta.get("opencode_workdir")
+            return (
+                meta.get("opencode_session_id"),
+                meta.get("opencode_workdir"),
+                meta.get("opencode_model_id"),
+            )
     except Exception as exc:
         log.warning("_load_chat_state failed: %s", exc)
-    return None, None
+    return None, None, None
 
 
-async def _save_chat_state(chat_id: str, session_id: str, workdir_name: str):
-    """Persist opencode session_id and workdir_name into chat meta."""
+async def _save_chat_state(chat_id: str, session_id: str, workdir_name: str, model_id: str = ""):
+    """Persist opencode session_id, workdir_name and model_id into chat meta."""
     try:
         chat = await _chats_call("get_chat_by_id", chat_id)
         if chat:
@@ -109,6 +113,7 @@ async def _save_chat_state(chat_id: str, session_id: str, workdir_name: str):
             meta = dict(chat_data.get("meta", {}))
             meta["opencode_session_id"] = session_id
             meta["opencode_workdir"] = workdir_name
+            meta["opencode_model_id"] = model_id
             chat_data["meta"] = meta
             if "title" not in chat_data:
                 chat_data["title"] = workdir_name
@@ -488,14 +493,28 @@ class Pipe:
 
         # --- Workdir ---
         chat_id = __chat_id__ or "default"
-        session_id, workdir_name = await _load_chat_state(chat_id)
+        session_id, workdir_name, saved_model_id = await _load_chat_state(chat_id)
+
+        # reset session if model changed — OpenCode can't resume across models
+        model_changed = bool(session_id and saved_model_id and saved_model_id != model_id)
+        if model_changed:
+            log.info("Model changed (%s → %s), resetting session", saved_model_id, model_id)
+            session_id = None
 
         if not workdir_name:
             workdir_name = await _project_name_from_prompt(prompt, __event_emitter__)
             if workdir_name == "Project":
                 workdir_name = f"Project_{chat_id[:6]}"
 
-        workdir = Path(self.valves.WORKDIR_ROOT) / workdir_name
+        # isolate projects per user — name with fallback to email prefix
+        user_info = __user__ or {}
+        user_name = (
+            user_info.get("name")
+            or (user_info.get("email") or "").split("@")[0]
+            or "default"
+        )
+        user_folder = re.sub(r"[^\w\-]", "_", user_name) or "default"
+        workdir = Path(self.valves.WORKDIR_ROOT) / user_folder / workdir_name
         workdir.mkdir(parents=True, exist_ok=True)
 
         # --- AGENTS.md template ---
@@ -546,6 +565,13 @@ class Pipe:
         artifact_snapshot = _snapshot_artifacts(scan_dirs)
         await emit_status("Starting OpenCode…")
 
+        if model_changed:
+            yield (
+                f"> ⚠️ **Model changed.** New session started — "
+                f"previous conversation context is not available. "
+                f"Project files in `{workdir_name}/` are preserved.\n\n"
+            )
+
         total_tokens = 0
         new_session_id: Optional[str] = None
         heartbeat_task: Optional[asyncio.Task] = None
@@ -587,7 +613,7 @@ class Pipe:
                     sid = event.get("sessionID")
                     if sid and not new_session_id:
                         new_session_id = sid
-                        await _save_chat_state(chat_id, sid, workdir_name)
+                        await _save_chat_state(chat_id, sid, workdir_name, model_id)
 
                 elif etype == "tool_use":
                     part = event.get("part") or {}

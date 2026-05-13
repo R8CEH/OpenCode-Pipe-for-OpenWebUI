@@ -135,6 +135,18 @@ OpenCode session IDs are stored in OpenWebUI's chat metadata via the internal AP
 - **After pipe updates** — session and workspace are restored correctly (no state lost on code changes)
 - **Across chats** — each chat is isolated with its own session and directory
 
+### Switching models mid-chat
+
+Each OpenWebUI user gets their own subdirectory under `WORKDIR_ROOT` based on their display name. Project files are always isolated per user.
+
+When you switch to a different model within the same chat, the pipe detects the change and starts a fresh OpenCode session. The agent will not remember the previous conversation, but **all project files are preserved** — the new model can read and continue working with everything already written.
+
+A warning is shown at the top of the response when this happens:
+
+> ⚠️ **Model changed.** New session started — previous conversation context is not available. Project files in `ProjectName/` are preserved.
+
+To give the new model context about what was done before, use an `AGENTS.md` file in the project root — it is read automatically at the start of every session.
+
 ## AGENTS.md template
 
 OpenCode reads `AGENTS.md` from the project root as persistent context — similar to Claude's `CLAUDE.md`. You can provide a template that gets copied into every new workspace:
@@ -169,7 +181,7 @@ Each agent action appears as a collapsible block:
   ```
 ```
 📎 calculator.py · 1.2 KiB
-📊 Tokens: 45,231
+📊 Токены: 45,231
 ```
 
 ## Known limitations
@@ -181,7 +193,7 @@ Each agent action appears as a collapsible block:
 
 ## Related projects
 
-- [openwebui-claude-code](https://github.com/R8CEH/openwebui-claude-code) — Claude Code pipe for OpenWebUI
+- [openwebui-claude-code](https://github.com/R8CEH/openwebui-claude-code) — Claude Code pipe for OpenWebUI (same author)
 - [OpenCode](https://github.com/sst/opencode) — the underlying coding agent
 - [OpenWebUI](https://github.com/open-webui/open-webui) — the chat interface
 
