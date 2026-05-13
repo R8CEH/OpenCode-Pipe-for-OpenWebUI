@@ -1,0 +1,2 @@
+# OpenCode Pipe for OpenWebUI
+
