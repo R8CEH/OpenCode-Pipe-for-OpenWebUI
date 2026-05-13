@@ -21,7 +21,7 @@ OpenWebUI chat
       ↓  prompt
 OpenCode Pipe (opencode_pipe.py)
       ↓  subprocess
-OpenCode CLI  →  OpenRouter / RouterAI API
+OpenCode CLI  →  OpenRouter API
       ↓  stream-json events
 Tool displays + artifacts + text
       ↓
@@ -114,7 +114,7 @@ openrouter/anthropic/claude-sonnet-4.6
 
 Display names are generated automatically: `openrouter/deepseek/deepseek-v4-flash` → **DeepSeek: DeepSeek V4 Flash ⚡ (Code)**.
 
-Any OpenRouter or RouterAI model can be used — just add its ID to the `MODELS` valve.
+Any OpenRouter model can be used — just add its ID to the `MODELS` valve.
 
 
 ## Project workspaces
@@ -168,8 +168,8 @@ Each agent action appears as a collapsible block:
   5 passed in 0.12s
   ```
 
-📎 calculator.py · 1.2 KiB       ← downloadable artifact
-📊 Токены: 45,231                 ← token usage
+📎 calculator.py · 1.2 KiB
+📊 Tokens: 45,231
 ```
 
 ## Known limitations
@@ -178,13 +178,10 @@ Each agent action appears as a collapsible block:
 - **File browser** — project files live on the server. To browse them from the browser, install [FileBrowser Quantum](https://github.com/gtsteffaniak/filebrowser) pointed at your `WORKDIR_ROOT`.
 - **Image generation** — not supported; the pipe handles text and code only.
 
-## File access
-
-To browse, upload, and download project files from the browser, install a self-hosted file manager pointed at your projects directory. [FileBrowser Quantum](https://github.com/gtsteffaniak/filebrowser) is a good option — actively maintained fork with 2FA and OIDC support.
 
 ## Related projects
 
-- [openwebui-claude-code](https://github.com/R8CEH/openwebui-claude-code) — Claude Code pipe for OpenWebUI (same author)
+- [openwebui-claude-code](https://github.com/R8CEH/openwebui-claude-code) — Claude Code pipe for OpenWebUI
 - [OpenCode](https://github.com/sst/opencode) — the underlying coding agent
 - [OpenWebUI](https://github.com/open-webui/open-webui) — the chat interface
 

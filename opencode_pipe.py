@@ -5,7 +5,7 @@ description: Run OpenCode's agent loop from inside OpenWebUI chats via subproces
              isolated project directory. Files created by the agent are uploaded
              as artifacts.
 author: Denis Kutuzov (aka R8CEH)
-author_url: https://github.com/R8CEH/openwebui-claude-code
+author_url: https://github.com/R8CEH/OpenCode-Pipe-for-OpenWebUI
 version: 0.2.0
 license: MIT
 requirements:
@@ -645,4 +645,4 @@ class Pipe:
             yield chunk
 
         if total_tokens:
-            yield f"\n\n_📊 Токены: {total_tokens:,}_\n"
+            yield f"\n\n_📊 Tokens: {total_tokens:,}_\n"
