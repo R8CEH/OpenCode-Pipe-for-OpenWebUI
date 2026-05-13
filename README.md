@@ -167,7 +167,7 @@ Each agent action appears as a collapsible block:
   ```
   5 passed in 0.12s
   ```
-
+```
 📎 calculator.py · 1.2 KiB
 📊 Tokens: 45,231
 ```
